@@ -1,0 +1,121 @@
+//https://ddb-authorization-api.herokuapp.com/
+### get user route
+GET http://localhost:8999/
+
+
+### get user route
+GET http://localhost:8999/test
+### register route
+POST https://ddb-authorization-api.herokuapp.com/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "Pat12",
+    "email": "pat12@t.com",
+    "password": "123",
+    "firstName": "Patrick",
+    "lastName": "Conrad"
+}
+
+
+### register route
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "Pat",
+    "email": "pat@t.com",
+    "password": "123",
+    "firstName": "Patrick",
+    "lastName": "Conrad"
+}
+
+### login route
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "pat12",
+    "password": "123"
+}
+
+### update user route
+PUT http://localhost:8080/api/v1/user/60a8084883abdd11b4e0d8f2
+Content-Type: application/json
+
+{
+    "email": "p@p.com"
+}
+
+### delete route
+DELETE  http://localhost:8080/api/v1/auth/logout
+Content-Type: application/json
+
+### verify-email/verify-account
+PUT http://localhost:8080/api/v1/secondary-auth/verify-email/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTg0NTE4MTg0MDg3NDE0MGJjNDhlZiIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMjM6NDY6MTIuODk2WiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTY0MDQ3MiwiZXhwIjoxNjIxOTQwNDcyfQ.1YPQGnbeErbEorv3HRKq_IcZ8kmXsJlR0AQk0Q_skvs
+Content-Type: application/json
+
+### login pin route
+PUT http://localhost:8080/api/v1/secondary-auth/login-pin/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTdkMDkyNzBjNWVjM2NmNDU0NjdiMSIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMTc6MDQ6NTUuNTY2WiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTYxNjM5NSwiZXhwIjoxNjIxOTE2Mzk1fQ.ZjBZbA3H2KAYwKjybLLvEUqBM2LQYlEtW-PS9m5oYd4
+Content-Type: application/json
+
+{
+    "pin": "185074"
+}
+
+### reset route
+PUT http://localhost:8080/api/v1/auth/forgot-password
+Content-Type: application/json
+
+    {
+        "identifier": "eee34"
+    }
+
+### reset pin route
+PUT http://localhost:8080/api/v1/auth/reset-password/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTdmZDlmMTQwNWZjNjRmODBjMGUyYyIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMTk6MTA6MDUuMTUzWiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTYyMzkwNSwiZXhwIjoxNjIxOTIzOTA1fQ.5ILWFlFvvbW8AIms5IZw7KSoPVqlQ1KM57cnkc6tVow
+Content-Type: application/json
+
+{
+    "password": "12"
+}
+
+### login route
+PUT http://localhost:8080/api/v1/secondary-auth/reset-pin/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTdmZDlmMTQwNWZjNjRmODBjMGUyYyIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMTk6MDk6NDEuMTQxWiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTYyMzg4MSwiZXhwIjoxNjIxOTIzODgxfQ.f3KJkjcoH91DpipWj4vLIq2kglsgVulnJ4Q6FkAGthc
+Content-Type: application/json
+
+{
+    "pin":"877400"
+}
+
+### login route
+PUT http://localhost:8080/api/v1/secondary-auth/verify-pin/
+Content-Type: application/json
+
+### login route
+PUT http://localhost:8080/api/v1/secondary-auth/reset-pin/
+Content-Type: application/json
+
+### login route
+PUT http://localhost:8080/api/v1/secondary-auth/phone-pin/
+Content-Type: application/json
+
+
+### verify phone route
+PUT http://localhost:8080/api/v1/secondary-auth/verify-phone/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTgwODQ4ODNhYmRkMTFiNGUwZDhmMiIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMjE6NTQ6MTguMDc3WiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTYzMzc1OCwiZXhwIjoxNjIxOTMzNzU4fQ.Th4rkGyTvypwJ5P-2_O6jqua1iSU2NjxG9tkJXTlFQs
+Content-Type: application/json
+
+{
+    "pin": "446485"
+}
+
+
+
+### Get User
+GET http://localhost:8080/api/v1/user/60a85e3cba01b30015b706e9
+Content-Type: application/json
+
+
+
+### Get User
+DELETE http://localhost:8080/api/v1/user/60a85e3cba01b30015b706e9
+Content-Type: application/json

@@ -1,0 +1,4 @@
+*node_modules/*
+src/config/config.env
+serverKeys/privateKeys
+serverKeys/publicKeys
