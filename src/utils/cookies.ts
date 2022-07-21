@@ -3,14 +3,9 @@ interface Obj {
     name: string,
     cookie: string
 }
-type ObjectKey = keyof typeof Object;
-
-export const cookieExtractor = async (setCookies: string) => {
-    
+const cookieExtractor = (setCookies: string) => {
     let cookies: Obj | {} = {};
-    
     const stringCookies = setCookies.split(';')
-    console.log({stringCookies: stringCookies.length})
     if(stringCookies.length >=1){
         const cooks = ()=> stringCookies.map((c: string)=>{
             return {
@@ -18,14 +13,13 @@ export const cookieExtractor = async (setCookies: string) => {
                 cookie: c.split('=')[1]
             }
         })
-        cookies = await cooks()
+        cookies = cooks()
     }
-    console.log({adfafjkacookies: cookies})
     return cookies
 }
 
 
-export const getCookie = (req: Request, cookieName: string) => {
+const getCookie = (req: Request, cookieName: string) => {
     if(req && req.headers.cookie){
         const stringCookies = req.headers.cookie.split(';')
         const hasCookie = stringCookies.find(c=> {
@@ -36,5 +30,10 @@ export const getCookie = (req: Request, cookieName: string) => {
         } )
     }
 }   
-// test
-// "test=123"
+
+const cookies = {
+    getCookie,
+    cookieExtractor
+}
+
+export default cookies
