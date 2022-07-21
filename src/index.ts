@@ -1,14 +1,16 @@
-import { cookieExtractor, getCookie } from './utils/cookies';
-import { token } from './utils/jwts';
+import cookies from './utils/cookies';
+import jwts from './utils/jwts';
+import keys from './utils/keys';
 import { connectToDatabase, disconnectFromDatabase } from './config/database';
 import { logger } from './config/logger';
 import express, {Request, Response, NextFunction} from 'express';
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 dotenv.config({path: __dirname+'/config/config.env'});
 
+const {} = keys;
 const gracefulShutdown = (signal: string)=>{
-    process.on("SIGTERM"||"SIGINT", async ()=>{
+    process.on(signal, async ()=>{
         server.close();
         await disconnectFromDatabase();
         process.exit(0);
@@ -16,24 +18,24 @@ const gracefulShutdown = (signal: string)=>{
 }
 
 const app = express();
-app.get('/', (req: Request, res: Response)=>{
-    const tkn = token();
-    res.cookie('refresh', tkn, {
-        httpOnly: true,
-        maxAge: 5000000     
-    })
-    res.cookie('access', tkn, {
-        httpOnly: true,
-        maxAge: 5000000     
-    })
-    res.status(200).send({test: 'hi'})
-})
-app.get('/test', (req: Request, res: Response)=>{
-    console.log({cooks: req.headers.cookie});
-    console.log(getCookie(req, 'access'));
-    console.log(getCookie(req, 'refresh'));
+// app.get('/', (req: Request, res: Response)=>{
+//     const tkn = jwts.signToken();
+//     res.cookie('refresh', tkn, {
+//         httpOnly: true,
+//         maxAge: 5000000     
+//     })
+//     res.cookie('access', tkn, {
+//         httpOnly: true,
+//         maxAge: 5000000     
+//     })
+//     res.status(200).send({test: 'hi'})
+// })
+// app.get('/test', (req: Request, res: Response)=>{
+//     console.log({cooks: req.headers.cookie});
+//     console.log(getCookie(req, 'access'));
+//     console.log(getCookie(req, 'refresh'));
 
-})
+// })
 
 const port = process.env.PORT || 8999
  const server = app.listen(port, async () => {
