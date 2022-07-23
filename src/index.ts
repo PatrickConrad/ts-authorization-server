@@ -1,15 +1,12 @@
-import cookies from './utils/cookies';
-import jwts from './utils/jwts';
-import keys from './utils/keys';
+import dotenv from "dotenv";
+dotenv.config({path: __dirname+'/config/config.env'});
 import { connectToDatabase, disconnectFromDatabase } from './config/database';
 import { logger } from './config/logger';
 import express, {Request, Response, NextFunction} from 'express';
-import dotenv from "dotenv";
+import {corsSetup} from './config/cors';
+import {router} from './router';
 
-dotenv.config({path: __dirname+'/config/config.env'});
-
-const {} = keys;
-const gracefulShutdown = (signal: string)=>{
+export const gracefulShutdown = (signal: string)=>{
     process.on(signal, async ()=>{
         server.close();
         await disconnectFromDatabase();
@@ -18,31 +15,36 @@ const gracefulShutdown = (signal: string)=>{
 }
 
 const app = express();
-// app.get('/', (req: Request, res: Response)=>{
-//     const tkn = jwts.signToken();
-//     res.cookie('refresh', tkn, {
-//         httpOnly: true,
-//         maxAge: 5000000     
-//     })
-//     res.cookie('access', tkn, {
-//         httpOnly: true,
-//         maxAge: 5000000     
-//     })
-//     res.status(200).send({test: 'hi'})
-// })
-// app.get('/test', (req: Request, res: Response)=>{
-//     console.log({cooks: req.headers.cookie});
-//     console.log(getCookie(req, 'access'));
-//     console.log(getCookie(req, 'refresh'));
 
-// })
+// if(process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-const port = process.env.PORT || 8999
- const server = app.listen(port, async () => {
+if(process.env.NODE_ENV === 'development') app.enable('trust proxy');
+
+app.use((req: Request, res: Response, next: NextFunction) =>{
+    corsSetup(req, res, next);
+});
+
+app.use((req: Request, res: Response, next: NextFunction)=>{
+    console.log("IP",  req.ip, req.socket.remoteAddress)
+    next()
+})
+
+app.use(express.json());
+
+app.use(express.urlencoded({extended: true}));
+
+app.get('/', (req: Request, res: Response, next: NextFunction)=>{
+    res.send("Welcome to my api")
+})
+app.use('/api/v1', router);
+
+
+const port = process.env.PORT || 8090
+const server = app.listen(port, async () => {
     await connectToDatabase();
     logger.info(`Ready on port ${port}`);
- })
- .on("error", (e)=> logger.error(e,"Error starting server."));
+})
+.on("error", (e)=> logger.error(e,"Error starting server."));
 
 
 

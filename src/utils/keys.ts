@@ -133,10 +133,6 @@ const decryptWithPrivate = (key: string, data: Buffer) => {
   return decrypted; 
 }
 
-const difieKey = () => {
-  
-}
-
 const keys = {
   decryptWithPrivate,
   encryptWithPublic,

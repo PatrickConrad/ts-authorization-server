@@ -26,6 +26,7 @@ https://blog.logrocket.com/5-ways-to-make-http-requests-in-node-js/
 https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey#hkdf
 
 
+https://www.youtube.com/watch?v=hPck3Q13wdE
 
 
 
