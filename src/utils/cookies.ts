@@ -26,8 +26,9 @@ const getCookie = (req: Request, cookieName: string) => {
             if(c.includes(cookieName)){
                 return cookieName.split('=')[1]
             }
-            return null
+            return false
         } )
+        return hasCookie;
     }
 }   
 

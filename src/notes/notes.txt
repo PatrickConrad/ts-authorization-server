@@ -1,0 +1,36 @@
+Id auth server
+
+request public and private keys for every service connected to it
+
+uses the key provider to create its keys
+
+has own connection to the key service 
+
+for other servers connecting directly with the key service and requesting keys a random secret key is generated 
+-on first use this secret is signed using the  requesting servers stored public key assigned to that serverice by key server
+
+the requesting server then decrypts the data using private key and sends it back to verify secret is accurate and returns it to key server encrypted by the key servers public key
+
+the key serever decrypts the req matches the hashed secret key and then creates new key pair
+server encrypts private key with hashed secret key and stores it and public key
+
+key server encrypts with req public key and sends un encrypted keys and hash of secret key to be used to for session iding
+
+same type of process to get app secrets
+
+
+
+
+https://blog.logrocket.com/5-ways-to-make-http-requests-in-node-js/
+
+https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey#hkdf
+
+
+
+
+
+
+
+
+
+Use diffie hillman with a second token cookie signed with secret id and isAuth?
