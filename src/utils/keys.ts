@@ -6,12 +6,11 @@ const getSecret = () => {
   return crypto.randomBytes(32).toString('hex')
 }
 
-const typeOfKey = (keyName: string) => keyName.toLowerCase().includes('private') ? 'privateKeys' : 'publicKeys'
-
-
-const checkPath = async (dir: string, keyName:string, setPath: string): Promise<boolean> => {
+const checkPath = async (setPath: string, pathType?: string): Promise<boolean> => {
   let doesExist = false;
-  const reqPath = path.join(dir, setPath+typeOfKey(keyName))
+  const usePath = pathType?`/${pathType}Keys`:''
+  console.log({paths: setPath+usePath})
+  const reqPath = setPath+usePath
   await fs.access(reqPath, (error) =>{
     if (error) {
       doesExist = false
@@ -25,24 +24,20 @@ const checkPath = async (dir: string, keyName:string, setPath: string): Promise<
   return doesExist
 }
 
-const saveKey = (key: string, keyName: string, pathToFile?: string) => {
-  const setName = keyName+typeOfKey(keyName).toUpperCase()
-  let setPath = pathToFile;
-  if(!pathToFile) {
-    setPath = `../config/keys/${typeOfKey(keyName)}`
-  }
-  fs.writeFileSync(`${pathToFile}/${typeOfKey(setName)}/${setName}.pem`, key);
+const saveKey = (key: string, keyName: string, pathToFile: string, type?: string) => {
+  const setName = keyName+`${type?type.charAt(0).toUpperCase() + type.slice(1):''}`+'Key'
+  return fs.writeFileSync(`${pathToFile}/${type}Keys/${setName}.pem`, key);
 }
 
-const readKey = (keyName: string, pathToFile = path.join(__dirname, `../../serverKeys`)) => {
-    const key = fs.readFileSync(`${pathToFile}/${typeOfKey(keyName)}/${keyName}.pem`, 'utf8')
-
+const readKey = (keyFileName: string, pathToFile: string) => {
+    const key = fs.readFileSync(`${pathToFile}/${keyFileName}.pem`, 'utf8')
     return key;
 }
 
   
 const createKeys = async (password: string, keyName: string, pathToFile?: string, method?: string) => {
   if(!password) return;
+  const usePath = pathToFile?pathToFile:path.join(__dirname, '../config/keys')
   const myKeys = generateKeyPairSync('rsa', {
         modulusLength: 4096,
         publicKeyEncoding: {
@@ -57,16 +52,22 @@ const createKeys = async (password: string, keyName: string, pathToFile?: string
       }
     })
     const keys = myKeys
-    const pathExists = await checkPath(__dirname, keyName,  !pathToFile?'':pathToFile)
+    const privatePathExists = await checkPath(usePath, 'private')
+    const publicPathExists = await checkPath(usePath, 'public')
     
     if(method === 'save'){
-      if(!pathExists){
-        fs.promises.mkdir(path.join(__dirname, pathToFile?pathToFile:''), { recursive: true });
+      if(!privatePathExists){
+        await fs.promises.mkdir(usePath+'/privateKeys', { recursive: true });
       }
-      saveKey(keys.privateKey, keyName);
-      saveKey(keys.publicKey, keyName);  
+      if(!publicPathExists){
+       await fs.promises.mkdir(usePath+'/publicKeys', { recursive: true });
+      }
+
+      saveKey(keys.privateKey, keyName, usePath, 'private');
+      saveKey(keys.publicKey, keyName, usePath, 'public');  
       return;
     }
+
     return keys
     
   };
@@ -133,7 +134,7 @@ const decryptWithPrivate = (key: string, data: Buffer) => {
   return decrypted; 
 }
 
-const keys = {
+export const keys = {
   decryptWithPrivate,
   encryptWithPublic,
   createKeys,
@@ -142,4 +143,3 @@ const keys = {
   confirmPassword,
   getSecret
 }
-export default keys

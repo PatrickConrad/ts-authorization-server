@@ -1,4 +1,4 @@
-import keys from '../utils/keys';
+import {keys} from '../utils/keys';
 const { workerData, parentPort } = require("worker_threads")
 
 
@@ -26,7 +26,7 @@ const {
 const {  workType: string, data: IncomingData } = workerData
 
 parentPort.postMessage({
-  
+
 })
 
 
