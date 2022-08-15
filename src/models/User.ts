@@ -9,6 +9,7 @@ interface MyUser {
         email: string,
         unverifiedEmail?: string,
         emailVerified: boolean,
+        emailPin?: string,
         phoneVerified: boolean,
         unverifiedPhone?: string,
         phoneNumber?: string,
@@ -17,19 +18,23 @@ interface MyUser {
         twoPointAuth: boolean,
         twoPointPreference: string,
         resetToken: string,
+        forgotPassToken: string,
+        loginToken: string,
+        resetPin: string,
         phonePin: string,
+        loginPin: string,
+        verifyPin: string,
         verificationToken: string,
         failedLogins: number,
-        consent: ConsentScope
-}
-interface ConsentScope {
-    consentId: string,
-    scopes: Array<string>
+        contactPreference: string,
+        googleUser?: boolean,
+        passwordSet: boolean,
+        consents: string[]
 }
 
-const ScopeSchema = new mongoose.Schema({ scopeType: { type: String, enum: ['email', 'phone', 'auth'] } });
+interface IUser extends MyUser, mongoose.Document{}
 
-const UserSchema = new mongoose.Schema<MyUser>({
+const UserSchema: mongoose.Schema = new mongoose.Schema<MyUser>({
         username: {
             type: String,
             lowercase: true,
@@ -84,7 +89,7 @@ const UserSchema = new mongoose.Schema<MyUser>({
         },
         phoneNumber: {
             type: String,
-            minlength: 10
+            default: ''
         },
         phoneCarrier: {
             type: String,
@@ -106,9 +111,39 @@ const UserSchema = new mongoose.Schema<MyUser>({
             default: "",
             select: false 
         },
+        forgotPassToken: {
+            type: String,
+            default: "",
+            select: false
+        },
+        loginToken: {
+            type: String,
+            default: "",
+            select: false
+        },
+        loginPin: {
+            type: String,
+            default: '',
+            select: false
+        },
+        resetPin: {
+            type: String,
+            default: '',
+            select: false
+        },
         phonePin: {
             type: String,
             default: "",
+            select: false
+        },
+        emailPin: {
+            type: String,
+            default: "",
+            select: false
+        },
+        verifyPin: {
+            type: String,
+            default: '',
             select: false
         },
         verificationToken: {
@@ -116,20 +151,28 @@ const UserSchema = new mongoose.Schema<MyUser>({
             default: "",
             select: false
         },
+        passwordSet: {
+            type: Boolean,
+            default:true
+        },
         failedLogins: {
             type: Number,
             default: 0,
             expires: 30000
-        },        
-        consent: [{
-            clientId: {
-                type: String,
-            },
-            scopes: [{
-                type: ScopeSchema
-            }]
+        },
+        contactPreference: {
+            type: String,
+            enum: ['email', 'phone'],
+            default: 'email'
+        },
+        googleUser: {
+            type: Boolean,
+            default: false
+        },
+        consents: [{
+            type: String 
         }]
 });
 
-export const User = mongoose.model<MyUser>("User", UserSchema);
+export const User = mongoose.model<IUser>("User", UserSchema);
 

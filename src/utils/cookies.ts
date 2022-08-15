@@ -1,40 +1,64 @@
 import {Request} from 'express'
-interface Obj {
-    name: string,
-    cookie: string
+
+interface CookieOptions {
+    expires: Date,
+    secure: boolean,
+    httpOnly: boolean,
+    sameSite: 'Lax'|'None'|'Strict'
 }
-const cookieExtractor = (setCookies: string) => {
-    let cookies: Obj | {} = {};
-    const stringCookies = setCookies.split(';')
-    if(stringCookies.length >=1){
-        const cooks = ()=> stringCookies.map((c: string)=>{
-            return {
-                name: c.split('=')[0], 
-                cookie: c.split('=')[1]
-            }
-        })
-        cookies = cooks()
+
+const setOptions = (exp: number ,type?: string ) => {
+    try{
+        const cookieOptions: CookieOptions = {
+            expires: new Date(exp),
+            secure: true,
+            httpOnly: true,
+            sameSite: 'Lax'
+        }
+        if(process.env.NODE_ENV==='development' && type === 'client'){
+            cookieOptions.secure = true;
+            cookieOptions.sameSite = 'None';
+            cookieOptions.httpOnly = false;
+            console.log({cookieOptions})
+            return cookieOptions;
+        }
+        if(process.env.NODE_ENV==='development'){
+            cookieOptions.secure = false;
+            cookieOptions.sameSite = 'Lax';
+            return cookieOptions;
+        }
+
+        //if type exists special handlers here 
+        if(type === 'client'){
+            cookieOptions.httpOnly = false;
+            cookieOptions.sameSite = 'Lax';
+            cookieOptions.secure = true
+            return cookieOptions
+        }
+        //return default options if enviornment is not development or no special type handlers
+        console.log({cooks: cookieOptions})
+        return cookieOptions;
     }
-    return cookies
+    catch(error){
+        return {}
+    }
 }
 
 
 const getCookie = (req: Request, cookieName: string) => {
     if(req && req.headers.cookie){
         const stringCookies = req.headers.cookie.split(';')
+        if(!cookieName) return stringCookies
         const hasCookie = stringCookies.find(c=> {
-            if(c.includes(cookieName)){
-                return cookieName.split('=')[1]
-            }
-            return false
+            return c.includes(cookieName)
         } )
-        return hasCookie;
+        return !hasCookie ? false: hasCookie?.split('=')[1].replace(/%3D/g, '=').replace(/%2B/g, '+').replace(/%2F/g, '/');
     }
 }   
 
 const cookies = {
     getCookie,
-    cookieExtractor
+    setOptions
 }
 
 export default cookies

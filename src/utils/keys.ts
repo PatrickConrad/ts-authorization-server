@@ -2,14 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import crypto, {generateKeyPairSync, publicEncrypt, privateDecrypt} from 'crypto';
 
-const getSecret = () => {
-  return crypto.randomBytes(32).toString('hex')
+//get random pin code
+const getPin = () => {
+  return Math.floor(100000+Math.random()*900000);
+}
+
+const getSecret = (num: number) => {
+  return crypto.randomBytes(num?num:32).toString('hex')
 }
 
 const checkPath = async (setPath: string, pathType?: string): Promise<boolean> => {
   let doesExist = false;
   const usePath = pathType?`/${pathType}Keys`:''
-  console.log({paths: setPath+usePath})
   const reqPath = setPath+usePath
   await fs.access(reqPath, (error) =>{
     if (error) {
@@ -92,40 +96,36 @@ const hasher = (password: string, salt: string) => {
     return value
 };
 
-const encryptPassword = (password: string, rounds?: number) => {
-    let rds = !rounds ? 12 : rounds
-    const salt: string = generateSalt(rds);
-    console.log("SALT: ", salt.length);
-    const hash: string = hasher(password, salt);
-    const hashedPassword: string = `$${'1a'}$${rds}$${salt}${hash}`
+const encryptPassword = (password: string, type?: string, alg?: string) => {
+    //useAlg to interpret a specific hash or set one as a env variable
+    const useAlg = !alg?process.env.PASSWORD_HASHING_ALGORITHIM as string:process.env[`${type?.toUpperCase}_PASSWORD_HASHING_ALGORITHIM`] as string
+    const rounds = !type?process.env.PASSWORD_SALT_ROUNDS as string: process.env[`${type.toUpperCase()}_PASSWORD_SALT_ROUNDS`] as string
+    const salt = generateSalt(parseInt(rounds));
+    const hash = hasher(password, salt);
+    const hashedPassword = salt+hash
     return hashedPassword
 }
 
-const confirmPassword = (password: string, hashedPassword: string) => {
-    const parts = hashedPassword.split('$');
-    const rounds = parts[1];
-    const salt = parts[3].slice(parseInt(rounds));
-    const hash = parts[3].slice(parseInt(rounds)+1, parts[3].length-1);
-    console.log(salt);
-    console.log(hash);
+const confirmPassword = (password: string, hashedPassword: string, type?: string, alg?: string) => {
+    //useAlg to interpret a specific hash or set one as a env variable
+    const useAlg = !alg?process.env.PASSWORD_HASHING_ALGORITHIM as string:process.env[`${type?.toUpperCase}_PASSWORD_HASHING_ALGORITHIM`] as string
+    const rounds = !type?process.env.PASSWORD_SALT_ROUNDS as string: process.env[`${type.toUpperCase()}_PASSWORD_SALT_ROUNDS`] as string
+    const salt = hashedPassword.slice(0, parseInt(rounds));
+    const hash = hashedPassword.slice(parseInt(rounds), hashedPassword.length);
     const testPass = hasher(password, salt);
-    if(testPass === hash) return console.log('True');
-    return console.log('False')
+    if(testPass === hash) return true;
+    return false;
 }
 
 const encryptWithPublic = (key: string, data: string)=> {
   const encryptBuffer = Buffer.from(data);
   const enc =  publicEncrypt(key , encryptBuffer)
-  console.log("Text to be encrypted:");
-  console.log(data);
-  console.log("cipherText:");
-  console.log(enc.toString());
-  return enc.toString()
+  return enc.toString('hex')
 };
 
-const decryptWithPrivate = (key: string, data: Buffer) => {
-  const decryptBuffer = Buffer.from(data.toString("base64"), "base64");
-  const decrypted = privateDecrypt(key, decryptBuffer);
+const decryptWithPrivate = (key: string, data: string) => {
+  const decryptBuffer = Buffer.from(data);
+  const decrypted = JSON.parse(privateDecrypt(key, decryptBuffer).toString('ascii'));
 
   //print out the decrypted text
   console.log("decripted Text:");
@@ -141,5 +141,6 @@ export const keys = {
   readKey,
   encryptPassword,
   confirmPassword,
-  getSecret
+  getSecret,
+  getPin
 }

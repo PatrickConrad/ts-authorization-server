@@ -1,3 +1,4 @@
+import { helpers } from './helpers';
 import dotenv from "dotenv";
 dotenv.config({path: __dirname+'/config/config.env'});
 import { connectToDatabase, disconnectFromDatabase } from './config/database';
@@ -9,6 +10,7 @@ import {utils} from './utils'
 import path from 'path';
 
 const app = express();
+app.set('trust proxy', '127.0.0.1');
 
 // if(process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
@@ -27,9 +29,16 @@ app.use((req: Request, res: Response, next: NextFunction)=>{
     next()
 })
 
-app.get('/', (req: Request, res: Response, next: NextFunction)=>{
-    console.log("ADD TEST")
+app.get('/', async (req: Request, res: Response, next: NextFunction)=>{
+    console.log("test")
+    utils.keys.createKeys(process.env.ORGANIZATION_AUTH_TOKEN_PASSPHRASE as string, 'OrganizationAuth', path.join(__dirname, '../serverKeys'), 'save');
+
 })
+
+app.get('/ping', async (req: Request, res: Response, next: NextFunction)=>{
+    res.status(200).json({success: true, message: "pong"});
+})
+
 app.use('/api/v1', router);
 
 const port = process.env.PORT || 8090
