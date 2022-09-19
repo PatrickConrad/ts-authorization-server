@@ -19,12 +19,14 @@ interface MyUser {
         twoPointPreference: string,
         resetToken: string,
         forgotPassToken: string,
+        verificationToken: string,
+        orgVerificationToken: string,
         loginToken: string,
         resetPin: string,
         phonePin: string,
         loginPin: string,
         verifyPin: string,
-        verificationToken: string,
+        orgVerifyPin: string,
         failedLogins: number,
         contactPreference: string,
         googleUser?: boolean,
@@ -121,6 +123,17 @@ const UserSchema: mongoose.Schema = new mongoose.Schema<MyUser>({
             default: "",
             select: false
         },
+        orgVerificationToken: {
+            type: String,
+            default: '',
+            select: false
+        },
+        verificationToken: {
+            type: String,
+            default: "",
+            select: false
+        },
+
         loginPin: {
             type: String,
             default: '',
@@ -146,10 +159,10 @@ const UserSchema: mongoose.Schema = new mongoose.Schema<MyUser>({
             default: '',
             select: false
         },
-        verificationToken: {
+        orgVerifyPin: {
             type: String,
-            default: "",
-            select: false
+            default: '',
+            select: false,
         },
         passwordSet: {
             type: Boolean,

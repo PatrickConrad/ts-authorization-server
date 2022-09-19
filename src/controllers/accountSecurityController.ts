@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import {RegisterUser} from '../interfaces/register'
+import {RegisterUser, TwoPointMidware} from '../interfaces/register'
 import ErrorResponse from '../utils/errorResponse'
 import {utils} from '../utils'
 import {models} from '../models';
@@ -100,6 +100,7 @@ interface VerifyPin {
 
 interface Pin {
     pin: number,
+    redirect: string
     midware: Midware
 }
 
@@ -334,7 +335,7 @@ export const accountSecurityController = {
             if(!match) return next(new ErrorResponse("Failed to verify reset: invalid credentials", 401));
             user.resetPin = '';
             user.forgotPassToken = '';
-            const resetToken = await utils.jwts.signToken({id:user._id, hostname: req.hostname, type: "resetPw"});
+            const resetToken = await utils.jwts.signToken({id:user._id, hostname: req.hostname, type: "reset_password"});
             if(!resetToken.token) return next(new ErrorResponse("Internal error", 500))
             user.resetToken = resetToken.token;
             await user.save();
@@ -364,49 +365,45 @@ export const accountSecurityController = {
             const verify = utils.cookies.getCookie(req, 'verify') as string;
             const forgotPw = utils.cookies.getCookie(req, 'forgotPw') as string;
             const login = utils.cookies.getCookie(req, 'login') as string;
-            let token;
-            let type: 'login' | 'forgotPw' | 'verify' = 'verify';
+            const organizationVerify = utils.cookies.getCookie(req, 'organization_verify') as string;
+
+            let token: string = '';
+            let type: 'login' | 'forgot_password' | 'verify' | 'organization_verify' | 'verify' | '' = '';
             if(login) {
                 token = login;
                 type = 'login'
             }
             if(forgotPw) {
                 token = forgotPw;
-                type = 'forgotPw'
+                type = 'forgot_password'
             }
             if(verify) {
                 token = verify;
                 type = 'verify'
             }
-            if(!token) return next(new ErrorResponse("No access", 401));
+            if(organizationVerify){
+                token = organizationVerify;
+                type = 'organization_verify'
+            }
+            
+            if(token==='' || type==='') return next(new ErrorResponse("No access", 401));
             const info = utils.jwts.verifyToken(token, type) as VerifiedToken
             if(!info.isVerified || info.expired ) return next(new ErrorResponse("Not verified", 401));
             const pl = info.payload as Payload;
             if(!pl.id) return next(new ErrorResponse("Not found, no access", 401))
             const user = await models.User.findById(pl.id);
             if(!user) return next(new ErrorResponse("No user found, no access", 401));
-            const pin = utils.keys.getPin();
-            console.log({pin})
-            const hashedPin = utils.keys.encryptPassword(`${pin}`);
-            if(type === 'verify') user.verifyPin = hashedPin;
-            if(type === 'login') user.loginPin = hashedPin;
-            if(type === 'forgotPw') user.resetPin = hashedPin;
-            const newToken = utils.jwts.signToken({id: user._id, hostname: req.hostname, type})
-            user.verificationToken = newToken.token;
-            await user.save();
-            res.cookie(
-                type, 
-                newToken.token,
-                utils.cookies.setOptions(newToken.expires)
-            )
-            res.cookie(
-                `${type}Initiated`,
-                `true;${newToken.expires}`,
-                utils.cookies.setOptions(newToken.expires, 'client')
-            )
-            res.status(200).json({
-                success: true,
-            })
+            res.clearCookie(type);
+            res.clearCookie(`${type}_initiated`)
+            const data: TwoPointMidware = {
+                user,
+                type
+            }
+            req.body.midware = {
+                ...req.body.midware,
+                twoPoint: data
+            }
+            return helpers.securityRequests.sendSecurityPin(req, res, next)
         }
         catch(err){
             next(err)
@@ -462,6 +459,34 @@ export const accountSecurityController = {
                 isAdmin: user.isAdmin,
                 success: true
             })
+        }
+        catch(error){
+            next(error)
+        }
+    },
+    organizationPin: async(req: Request, res: Response, next: NextFunction) => {
+        try{
+            const body: Pin = req.body;
+            const {pin, redirect} = body;
+            const token = utils.cookies.getCookie(req, 'orgVerify')
+            if(!pin || !token) return next(new ErrorResponse("Failed to login: missing information", 402));
+            const info = await utils.jwts.verifyToken(token as string, "login") as VerifiedToken;
+            const pl = info.payload as Payload;
+            if(!info.isVerified || info.expired) return next(new ErrorResponse("Failed to verify reset", 401));
+            const user = await models.User.findById(pl.id).select('+orgVerifyPin').select('+orgVerifyToken');
+            if(!user || user.orgVerifyPin === '' || user.orgVerificationToken !== token) return next(new ErrorResponse("Not verified", 401));
+            const hashedPin = user.orgVerifyPin;
+            const match = await utils.keys.confirmPassword(`${pin}`, hashedPin);
+            if(!match) return next(new ErrorResponse("Failed to login: invalid credentials", 401));
+            user.orgVerifyPin = '';
+            user.orgVerificationToken = '';
+            await user.save();
+
+            req.body.midware.orgAuth = {
+                user,
+                redirect
+            }
+            return helpers.organization.orgLogin(req, res, next)
         }
         catch(error){
             next(error)

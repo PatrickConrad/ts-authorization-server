@@ -1,3 +1,5 @@
+import { Encrypted } from './../utils/keys';
+import { memoryCache } from './../config/cache';
 // import { proxyRequest } from './../helpers/proxyRequest';
 import { VerifiedToken } from './../types/imports';
 import mongoose, { ObjectId } from 'mongoose';
@@ -79,6 +81,48 @@ interface UserInfo {
     iat: number,
     exp: number
 }
+
+interface MyUser {
+    username: string,
+    isVerified: boolean,
+    isAdmin: boolean,
+    roles: [string],
+    password: string,
+    email: string,
+    unverifiedEmail?: string,
+    emailVerified: boolean,
+    emailPin?: string,
+    phoneVerified: boolean,
+    unverifiedPhone?: string,
+    phoneNumber?: string,
+    phoneCarrier?: string,
+    phoneCarrierEmail?: string,
+    twoPointAuth: boolean,
+    twoPointPreference: string,
+    resetToken: string,
+    forgotPassToken: string,
+    verificationToken: string,
+    orgVerificationToken: string,
+    loginToken: string,
+    resetPin: string,
+    phonePin: string,
+    loginPin: string,
+    verifyPin: string,
+    orgVerifyPin: string,
+    failedLogins: number,
+    contactPreference: string,
+    googleUser?: boolean,
+    passwordSet: boolean,
+    consents: string[]
+}
+
+interface IUser extends MyUser, mongoose.Document{}
+
+interface TwoPointMidware {
+    user: IUser;
+    type: PinTypes,
+}
+type PinTypes = 'login' | 'reset' | 'forgot_password' | 'organization_verify'
 
 export const authController = {
     login: async (req: Request, res: Response, next: NextFunction) => {
@@ -373,7 +417,7 @@ export const authController = {
             const pin = `${utils.keys.getPin()}`;
             console.log({pin})
             const hashedPin = await utils.keys.encryptPassword(pin);
-            const pinToken = await utils.jwts.signToken({id: user._id, hostname: req.hostname, type: 'forgotPw'});
+            const pinToken = await utils.jwts.signToken({id: user._id, hostname: req.hostname, type: 'forgot_password'});
             console.log("resetTok", pinToken.token);
             user.forgotPassToken = pinToken.token;
             user.resetPin = hashedPin;
@@ -608,10 +652,27 @@ export const authController = {
         try{
             const user = req.body.user;
             const orgId = req.query.id as string;
+
+            const token = req.query.token as string;
+            const redirect = req.query.redirect as string;
+            if(!redirect) return next(new ErrorResponse("Must include a authorized redirect url", 400))
+
+            if(!token || !orgId) return new ErrorResponse("Include all required", 400)
+            const verified = utils.jwts.verifyToken(token, 'consent') as VerifiedToken;
+            if(!verified || !verified.isVerified || !verified.expired) return new ErrorResponse("No access", 401)          
             const exists = await models.User.findOne({email: user.identifier}).select("+password") || await models.User.findOne({phoneNumber: user.identifier}).select("+password") || await models.User.findOne({username: user.identifier}).select("+password")
             if(!exists) return next(new ErrorResponse("User doesn't exist", 404))
             const orgExists = await exists?.consents.find(c=> orgId===c)
             if(!user.consent && !orgExists) return next(new ErrorResponse("Consent is requried for sign up", 404))
+            const twoPointData: TwoPointMidware = {
+                user: exists,
+                type: "organization_verify"
+            }
+            req.body.midware = {
+                ...req.body.midware,
+                twoPoint: twoPointData
+            }
+            
             const hasAccess = await utils.cookies.getCookie(req, 'access') as string;
             if(!hasAccess){
                 const match = utils.keys.confirmPassword(user.password, exists.password);
@@ -619,6 +680,9 @@ export const authController = {
                 if(!orgExists){
                     exists.consents = [...exists.consents, orgId]
                     await exists.save()
+                }
+                if(exists.twoPointAuth){
+                    return helpers.securityRequests.sendSecurityPin(req, res, next)
                 }
                 const data = {
                     id: exists._id,
@@ -628,11 +692,6 @@ export const authController = {
                 const orgKey = utils.keys.readKey('OrganizationAuthPublicKey', path.join(__dirname, '../../serverKeys/publicKeys'))
                 const encrypted = utils.keys.encryptWithPublic(orgKey, JSON.stringify(data));
                 console.log({encrypted})
-                const redirect = req.query.redirect as string;
-                console.log("router", req.query)
-                console.log("redirect", req.query.redirect)
-                if(!redirect) return next(new ErrorResponse("Must include a authorized redirect url", 400))
-                console.log({encrypted}) 
                 const clientUrl = `${redirect}?${qs.stringify({code: encrypted})}`
                 return res.status(200).json({
                     success: true,
@@ -645,23 +704,15 @@ export const authController = {
                 exists.consents = [...exists.consents, orgId]
                 await exists.save()
             }
-            const data = {
-                id: exists._id,
-                phoneVerified: exists.phoneVerified,
-                emailVerified: exists.emailVerified
+            if(exists.twoPointAuth){
+                return helpers.securityRequests.sendSecurityPin(req, res, next)
             }
-            const orgKey = utils.keys.readKey('OrganizationAuthPublicKey', path.join(__dirname, '../../serverKeys/publicKeys'))
-            console.log({orgKey})
-            const encrypted = utils.keys.encryptWithPublic(orgKey, JSON.stringify(data));
-            console.log({encrypted})
-            const redirect = req.query.redirect as string;
-            console.log(redirect)
-            if(!redirect) return next(new ErrorResponse("Must include a authorized redirect url", 400))
-            const clientUrl = `${redirect}?${qs.stringify({code: encrypted})}`
-            return res.status(200).json({
-                success: true,
-                clientUrl
-            })
+            req.body.midware.orgAuth = {
+                user: exists,
+                redirect
+            }
+            return helpers.organization.orgLogin(req, res, next)
+            
         }
         catch(err){
             next(err)
