@@ -1,34 +1,22 @@
 //https://ddb-authorization-api.herokuapp.com/
 ### get user route
-GET http://localhost:8999/
-
-
-### get user route
-GET http://localhost:8999/test
-### register route
-POST https://ddb-authorization-api.herokuapp.com/api/v1/auth/register
-Content-Type: application/json
-
-{
-    "username": "Pat12",
-    "email": "pat12@t.com",
-    "password": "123",
-    "firstName": "Patrick",
-    "lastName": "Conrad"
-}
+GET http://localhost:8090/
 
 
 ### register route
-POST http://localhost:8080/api/v1/auth/register
+POST http://localhost:8090/api/v1/auth/register
 Content-Type: application/json
 
 {
-    "username": "Pat",
-    "email": "pat@t.com",
-    "password": "123",
-    "firstName": "Patrick",
-    "lastName": "Conrad"
+    "email": "patcon1234@gmail.com",
+    "username": "patcon1234",
+    "password": "12345"
 }
+
+### verify-email/verify-account
+PATCH http://localhost:8090/api/v1/secondary-auth/account-verification/eyJhbGciOiJSU0EtU0hBMjU2IiwiZXhwIjoiMzAwMDAwIiwiYXVkIjoibG9jYWxob3N0Iiwic3ViIjoiNjJlMDI1ODBhY2FlYjdjMjhkZjkzNTQ5IiwiaXNzIjoidmJvbXMuY29tIiwidGFpIjoiMTY1ODg1NjgzMjcyNCJ9%5EeyJpZCI6IjYyZTAyNTgwYWNhZWI3YzI4ZGY5MzU0OSJ9%5EngFgR4mGM9uLzWQ9sn26GhkRex5C28WXiwMVSSdnJmX00ICJU2QldjAetGs2dQSPr4kRqX_qxgK8CYCTvMtk0IdAabUm34g00JUHRv53GcRBSztvPC-sZ2p4aS_qtOelOw4kpwiVzQ6mVMg1POWTpF5u6NSDuKoNYGrCqLQFbL7V5lTJXqYmakUMmXvxp2QyjuWqaLBgjVdIIpYyKEzV53LTDrOUEjfFN3kP6nafLI1pe5DHocnMR08ytX9P42iNwhADcUAlALdl5s7OWOOnb4zaf6FttYeXUQckUjeBrFvHZ8i_ONnihXh3fKtGNUHbEz-lBlEdoGt0PdiSjAqmeWIl_cXfDPLzpXbiNFSWFTQoFLuRZab3rMfRTSVGK31pWSPTKDWNx7hLj8LQI1R2RPz7Pb0ntY24QsHJgTdolmobxBisFZld86LbcqwFE176syM8aqFwXR4lzsRDwKbdUdRUgtzZvF8AQxPOcCAxk2tCW3MM1vplf_DEW2Cxi3sKtSB-ZHFh7Bx2kREvCs3vcMgMiPU_crmZJ9VFugKP9izb1jKXtrAd3tGXZDvSGZmr2972PbYkh7fpYzIPTgDnIr7FTrsdAdE4GDikMTJZXElApAMv_gPl67SACJYL4zO2_QWdyIMze95cp5SIBOefFK71GyMKCcdbk1kFka6QPqY
+Content-Type: application/json
+
 
 ### login route
 POST http://localhost:8080/api/v1/auth/login
@@ -51,9 +39,6 @@ Content-Type: application/json
 DELETE  http://localhost:8080/api/v1/auth/logout
 Content-Type: application/json
 
-### verify-email/verify-account
-PUT http://localhost:8080/api/v1/secondary-auth/verify-email/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTg0NTE4MTg0MDg3NDE0MGJjNDhlZiIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMjM6NDY6MTIuODk2WiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTY0MDQ3MiwiZXhwIjoxNjIxOTQwNDcyfQ.1YPQGnbeErbEorv3HRKq_IcZ8kmXsJlR0AQk0Q_skvs
-Content-Type: application/json
 
 ### login pin route
 PUT http://localhost:8080/api/v1/secondary-auth/login-pin/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYTdkMDkyNzBjNWVjM2NmNDU0NjdiMSIsImV4cGlyZXMiOjMwMDAwMCwiZXhwaXJlRGF0ZSI6IjIwMjEtMDUtMjFUMTc6MDQ6NTUuNTY2WiIsImlzcyI6ImxvY2FsaG9zdCIsImlhdCI6MTYyMTYxNjM5NSwiZXhwIjoxNjIxOTE2Mzk1fQ.ZjBZbA3H2KAYwKjybLLvEUqBM2LQYlEtW-PS9m5oYd4

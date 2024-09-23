@@ -1,0 +1,14 @@
+Next Steps:
+
+login and create user using google
+    - look into google sheets access 
+        --api key storage for e2e
+
+organization sign-up server
+- gives user encrypted api secret
+    -- uses to confirm request is from client 
+- request made gets token from auth server for client scope,
+    - request to user service using api key and client token and get api data.
+
+Implement a consent request screen and login
+- look into iframes

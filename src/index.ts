@@ -1,3 +1,4 @@
+import { helpers } from './helpers';
 import dotenv from "dotenv";
 dotenv.config({path: __dirname+'/config/config.env'});
 import { connectToDatabase, disconnectFromDatabase } from './config/database';
@@ -5,16 +6,11 @@ import { logger } from './config/logger';
 import express, {Request, Response, NextFunction} from 'express';
 import {corsSetup} from './config/cors';
 import {router} from './router';
-
-export const gracefulShutdown = (signal: string)=>{
-    process.on(signal, async ()=>{
-        server.close();
-        await disconnectFromDatabase();
-        process.exit(0);
-    })
-}
+import {utils} from './utils'
+import path from 'path';
 
 const app = express();
+app.set('trust proxy', '127.0.0.1');
 
 // if(process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
@@ -24,20 +20,26 @@ app.use((req: Request, res: Response, next: NextFunction) =>{
     corsSetup(req, res, next);
 });
 
+app.use(express.json());
+
+app.use(express.urlencoded({extended: true}));
+
 app.use((req: Request, res: Response, next: NextFunction)=>{
     console.log("IP",  req.ip, req.socket.remoteAddress)
     next()
 })
 
-app.use(express.json());
+app.get('/', async (req: Request, res: Response, next: NextFunction)=>{
+    console.log("test")
+    utils.keys.createKeys(process.env.ORGANIZATION_AUTH_TOKEN_PASSPHRASE as string, 'OrganizationAuth', path.join(__dirname, '../serverKeys'), 'save');
 
-app.use(express.urlencoded({extended: true}));
-
-app.get('/', (req: Request, res: Response, next: NextFunction)=>{
-    res.send("Welcome to my api")
 })
-app.use('/api/v1', router);
 
+app.get('/ping', async (req: Request, res: Response, next: NextFunction)=>{
+    res.status(200).json({success: true, message: "pong"});
+})
+
+app.use('/api/v1', router);
 
 const port = process.env.PORT || 8090
 const server = app.listen(port, async () => {
@@ -46,10 +48,10 @@ const server = app.listen(port, async () => {
 })
 .on("error", (e)=> logger.error(e,"Error starting server."));
 
-
-
- const signals = ["SIGTERM", "SIGINT"];
-
- for(let i = 0; i < signals.length; i++){
-     gracefulShutdown(signals[i]);
- }
+ process.on('SIGTERM'||"SIGINT", async ()=>{
+    console.log("Server is shutting down")
+    server.close();
+    console.log("Database is closing")
+    await disconnectFromDatabase();
+    process.exit(0);
+})
